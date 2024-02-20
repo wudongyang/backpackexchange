@@ -62,6 +62,10 @@ class BpxClient:
     # order
 
     def sign(self, instruction: str, params: dict):
+
+        if self.debug:
+            print(f'Instruction: {instruction}')
+            print(f'Params: {params}')
         sign_str = f"instruction={instruction}" if instruction else ""
         sorted_params = "&".join(
             f"{key}={value}" for key, value in sorted(params.items())
@@ -74,9 +78,9 @@ class BpxClient:
         signature_bytes = self.private_key.sign(sign_str.encode())
         encoded_signature = base64.b64encode(signature_bytes).decode()
 
-        if self.debug:
-            print(f'Waiting Sign Str: {sign_str}')
-            print(f"Signature: {encoded_signature}")
+        # if self.debug:
+        #     print(f'Waiting Sign Str: {sign_str}')
+        #     print(f"Signature: {encoded_signature}")
 
         headers = {
             "X-API-Key": self.api_key,
@@ -87,6 +91,26 @@ class BpxClient:
         }
         return headers
 
+    def orderQuery(self, symbol: str, orderId: str):
+        params = {'symbol': symbol, 'orderId': orderId}
+        return requests.get(url=f'{self.url}api/v1/order', proxies=self.proxies, params=params,
+                            headers=self.sign('orderQuery', params)).json()
+    
+    def orderQueryAll(self, symbol: str):
+        params = {'symbol': symbol}
+        return requests.get(url=f'{self.url}api/v1/orders', proxies=self.proxies, params=params,
+                            headers=self.sign('orderQueryAll', params)).json()
+
+    def cancelOrder(self, symbol: str, orderId: str):
+        params = {'symbol': symbol, 'orderId': orderId}
+        return requests.delete(url=f'{self.url}api/v1/order', proxies=self.proxies, data=json.dumps(params),
+                               headers=self.sign('orderCancel', params)).json()
+    
+    def cancelAllOrders(self, symbol: str):
+        params = {'symbol': symbol}
+        return requests.delete(url=f'{self.url}api/v1/orders', proxies=self.proxies, data=json.dumps(params),
+                               headers=self.sign('orderCancelAll', params)).json()
+
     def ExeOrder(self, symbol, side, orderType, timeInForce, quantity, price):
         params = {
             'symbol': symbol,
@@ -96,5 +120,21 @@ class BpxClient:
             'quantity': quantity,
             'price': price
         }
-        return requests.post(url=f'{self.url}api/v1/order', proxies=self.proxies, data=json.dumps(params),
-                             headers=self.sign('orderExecute', params)).json()
+
+        req = requests.post(url=f'{self.url}api/v1/order', proxies=self.proxies, data=json.dumps(params),
+                             headers=self.sign('orderExecute', params))
+        if req.ok:
+            if self.debug:
+                print("请求成功", req.text)
+            return True
+        else:
+            if self.debug:
+                print("请求失败", req.text)
+            return False
+    
+    def ExeLimitOrder(self, symbol, side, timeInForce, quantity, price):
+        return self.ExeOrder(symbol,side,"Limit",timeInForce, quantity, price)
+    
+    # 不好用
+    def ExeMarketOrder(self, symbol, side, timeInForce, quantity):
+        return self.ExeOrder(symbol,side,"Market",timeInForce, quantity)

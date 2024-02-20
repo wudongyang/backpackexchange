@@ -57,12 +57,12 @@ def historyTrades(symbol: str, limit: int = 100, offset: int = 0):
 if __name__ == '__main__':
     print(Assets())
 
-    print(Ticker('SOL_USDC'))
-    print(Depth('SOL_USDC'))
-    print(KLines('SOL_USDC', '1m'))
-    print(Status())
-    print(Ping())
-    print(Time())
-    print(recentTrades('SOL_USDC', 10))
-    print(historyTrades('SOL_USDC', 10))
+    print("----- Ticker \r\n", Ticker('SOL_USDC'))
+    print("----- Depth \r\n", Depth('SOL_USDC'))
+    # print(KLines('SOL_USDC', '1m'))
+    # print(Status())
+    # print(Ping())
+    # print(Time())
+    # print("----- recentTrades \r\n", recentTrades('SOL_USDC', 10))
+    # print("----- historyTrades \r\n", historyTrades('SOL_USDC', 10))
     pass
