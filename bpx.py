@@ -56,6 +56,9 @@ class BpxClient:
         params = {'limit': limit, 'offset': offset}
         if len(symbol) > 0:
             params['symbol'] = symbol
+        
+        if self.debug:
+            print(f'Params: {params}')
         return requests.get(url=f'{self.url}wapi/v1/history/fills', proxies=self.proxies, params=params,
                             headers=self.sign('fillHistoryQueryAll', params)).json()
 
@@ -93,8 +96,16 @@ class BpxClient:
 
     def orderQuery(self, symbol: str, orderId: str):
         params = {'symbol': symbol, 'orderId': orderId}
-        return requests.get(url=f'{self.url}api/v1/order', proxies=self.proxies, params=params,
-                            headers=self.sign('orderQuery', params)).json()
+        req = requests.get(url=f'{self.url}api/v1/order', proxies=self.proxies, params=params,
+                            headers=self.sign('orderQuery', params))
+        if req.ok:
+            if self.debug:
+                print("orderQuery 请求成功:", req.text)
+            return True
+        else:
+            if self.debug:
+                print("orderQuery 请求失败:", req.text)
+            return False
     
     def orderQueryAll(self, symbol: str):
         params = {'symbol': symbol}
@@ -103,8 +114,16 @@ class BpxClient:
 
     def cancelOrder(self, symbol: str, orderId: str):
         params = {'symbol': symbol, 'orderId': orderId}
-        return requests.delete(url=f'{self.url}api/v1/order', proxies=self.proxies, data=json.dumps(params),
-                               headers=self.sign('orderCancel', params)).json()
+        req = requests.delete(url=f'{self.url}api/v1/order', proxies=self.proxies, data=json.dumps(params),
+                               headers=self.sign('orderCancel', params))
+        if req.ok:
+            if self.debug:
+                print("cancelOrder 请求成功:", req.text)
+            return True
+        else:
+            if self.debug:
+                print("cancelOrder 请求失败:", req.text)
+            return False
     
     def cancelAllOrders(self, symbol: str):
         params = {'symbol': symbol}
@@ -125,11 +144,11 @@ class BpxClient:
                              headers=self.sign('orderExecute', params))
         if req.ok:
             if self.debug:
-                print("请求成功", req.text)
+                print("ExeOrder 请求成功:", req.text)
             return True
         else:
             if self.debug:
-                print("请求失败", req.text)
+                print("ExeOrder 请求失败:", req.text)
             return False
     
     def ExeLimitOrder(self, symbol, side, timeInForce, quantity, price):
